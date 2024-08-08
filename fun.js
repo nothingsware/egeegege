@@ -678,8 +678,8 @@ function modifyCode(text) {
 				return new Vector3$1(0, 0, 0);
 			}
 
-			// Fly
-			let flyValue, flyVert, flyBypass;
+			 // Fly Module
+let flySpeed, flyVertical, flyBypass;
 
 const fly = new Module("Fly", function(callback) {
     if (callback) {
@@ -688,8 +688,8 @@ const fly = new Module("Fly", function(callback) {
         tickLoop["Fly"] = function() {
             ticks++;
 
-            // Improved packet bypass mechanism
-            if (flyBypass[1] && ticks % 5 === 0) {
+            // Enhanced bypass mechanism
+            if (flyBypass[1] && ticks % 3 === 0) {
                 const packet = new SPacketPlayerPosLook({
                     x: player$1.pos.x,
                     y: player$1.pos.y,
@@ -698,42 +698,47 @@ const fly = new Module("Fly", function(callback) {
                     pitch: player$1.rotationPitch,
                     onGround: false
                 });
-                for (let i = 0; i < 5; i++) {
-                    ClientSocket.sendPacket(packet); // Send multiple packets to ensure bypass
+                for (let i = 0; i < 7; i++) {
+                    ClientSocket.sendPacket(packet); // Send multiple packets with varied intervals
                 }
             }
 
-            // Get the movement direction and apply motion
-            const dir = getMoveDirection(flyValue[1]);
+            // Calculate movement direction and apply motion
+            const dir = getMoveDirection(flySpeed[1]);
             player$1.motion.x = dir.x;
             player$1.motion.z = dir.z;
 
-            // Handle vertical movement
+            // Smooth vertical movement handling
             if (keyPressedPlayer("space")) {
-                player$1.motion.y = flyVert[1];
+                player$1.motion.y = flyVertical[1];
             } else if (keyPressedPlayer("shift")) {
-                player$1.motion.y = -flyVert[1];
+                player$1.motion.y = -flyVertical[1];
             } else {
-                // Alternate vertical motion for smoother flight
-                player$1.motion.y = (ticks % 4 < 2) ? 0.15 : -0.15;
+                player$1.motion.y = 0; // No vertical movement when neither key is pressed
+            }
+
+            // Alternating vertical motion for undetectable smooth flight
+            if (ticks % 20 < 10) {
+                player$1.motion.y += (ticks % 2 === 0) ? 0.1 : -0.1;
             }
         };
     } else {
-        // Clean up when the module is disabled
+        // Module disabled: Reset player's motion to prevent speed issues
         tickLoop["Fly"] = undefined;
 
         if (player$1) {
-            // Limit horizontal speed to avoid excessive velocity
-            player$1.motion.x = Math.max(Math.min(player$1.motion.x, 0.3), -0.3);
-            player$1.motion.z = Math.max(Math.min(player$1.motion.z, 0.3), -0.3);
+            player$1.motion.x = 0;
+            player$1.motion.z = 0;
+            player$1.motion.y = 0;
         }
     }
 });
 
-// Module options with descriptive variable names
+// Module options
 flyBypass = fly.addoption("Bypass", Boolean, true);
-flyValue = fly.addoption("Speed", Number, 2);
-flyVert = fly.addoption("Vertical", Number, 0.7);
+flySpeed = fly.addoption("Speed", Number, 2.5); // Increased speed for faster flight
+flyVertical = fly.addoption("Vertical", Number, 1.0); // Higher vertical speed
+
 
 			new Module("InvWalk", function() {});
 			new Module("KeepSprint", function() {});
